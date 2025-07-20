@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
@@ -9,9 +8,144 @@
   <link rel="icon" href="https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/svg/1f9a1.svg" type="image/svg+xml" />
 </head>
 <body>
-  <!-- 页面结构由之前生成 -->
-  <!-- 此处省略，实际将使用 Canvas 版本内容来生成 HTML 文件 -->
-  <!-- 我们这里只打包简化后的样本结构 -->
-  <div class="container"><h1>风太柔</h1></div>
+  <div class="sidebar">
+    <h2>分类</h2>
+    <button class="category-btn active" onclick="filterCards('all')">全部</button>
+    <button class="category-btn" onclick="filterCards('常用')">常用</button>
+    <button class="category-btn" onclick="filterCards('开发')">开发</button>
+    <button class="category-btn" onclick="filterCards('媒体')">媒体</button>
+    <button class="category-btn" onclick="filterCards('学习')">学习</button>
+    <button class="category-btn" onclick="filterCards('AI工具')">AI工具</button>
+    <button class="category-btn" onclick="filterCards('社区')">社区</button>
+    <button class="category-btn" onclick="filterCards('设计')">设计</button>
+  </div>
+
+  <div class="container">
+    <h1>风太柔</h1>
+
+    <div class="search-container">
+      <select id="engine">
+        <option value="https://www.baidu.com/s?wd=">Baidu</option>
+        <option value="https://www.google.com/search?q=">Google</option>
+      </select>
+      <input type="text" id="searchInput" placeholder="请输入搜索内容" />
+      <button onclick="search()">搜索</button>
+    </div>
+
+    <div class="grid" id="cardGrid">
+      <a href="https://www.baidu.com" class="card" data-category="常用">
+        <img src="https://cdn.jsdelivr.net/npm/simple-icons/icons/baidu.svg" alt="Baidu">
+        <span>Baidu</span>
+      </a>
+      <a href="https://www.google.com" class="card" data-category="常用">
+        <img src="https://cdn.jsdelivr.net/npm/simple-icons/icons/google.svg" alt="Google">
+        <span>Google</span>
+      </a>
+      <a href="https://github.com" class="card" data-category="开发">
+        <img src="https://cdn.jsdelivr.net/npm/simple-icons/icons/github.svg" alt="GitHub">
+        <span>GitHub</span>
+      </a>
+      <a href="https://bilibili.com" class="card" data-category="媒体">
+        <img src="https://cdn.jsdelivr.net/npm/simple-icons/icons/bilibili.svg" alt="Bilibili">
+        <span>Bilibili</span>
+      </a>
+    </div>
+
+    <div id="footer" style="margin-top: 60px; font-size: 0.9rem; color: #888; text-align: center;">
+      <p>&copy; 2025 风太柔 | 导航站</p>
+    </div>
+  </div>
+
+<script>
+  // 搜索功能：支持回车触发 + 本地存储引擎
+  const engineSelect = document.getElementById('engine');
+  const searchInput = document.getElementById('searchInput');
+
+  window.onload = () => {
+    const savedEngine = localStorage.getItem('searchEngine');
+    if (savedEngine) engineSelect.value = savedEngine;
+  };
+
+  engineSelect.addEventListener('change', () => {
+    localStorage.setItem('searchEngine', engineSelect.value);
+  });
+
+  searchInput.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') search();
+  });
+
+  function search() {
+    const engine = engineSelect.value;
+    const query = searchInput.value;
+    if (query.trim()) {
+      window.open(engine + encodeURIComponent(query), '_blank');
+    }
+  }
+
+  function filterCards(category) {
+    const cards = document.querySelectorAll('.card');
+    cards.forEach(card => {
+      const cardCategory = card.getAttribute('data-category');
+      card.style.display = (category === 'all' || cardCategory === category) ? 'block' : 'none';
+    });
+
+    const buttons = document.querySelectorAll('.category-btn');
+    buttons.forEach(btn => btn.classList.remove('active'));
+    event.target.classList.add('active');
+  }
+
+  // 收藏功能
+  function renderFavorites() {
+    const favContainerId = 'favorites-container';
+    let favContainer = document.getElementById(favContainerId);
+    if (!favContainer) {
+      favContainer = document.createElement('div');
+      favContainer.id = favContainerId;
+      favContainer.className = 'grid';
+      const header = document.createElement('h2');
+      header.textContent = '⭐ 收藏夹';
+      header.style.marginTop = '40px';
+      document.querySelector('.container').prepend(header);
+      document.querySelector('.container').prepend(favContainer);
+    }
+    favContainer.innerHTML = '';
+    const favorites = JSON.parse(localStorage.getItem('favorites') || '[]');
+    favorites.forEach(fav => {
+      const a = document.createElement('a');
+      a.href = fav.url;
+      a.className = 'card';
+      a.target = '_blank';
+      a.innerHTML = `<span>${fav.title}</span>`;
+      favContainer.appendChild(a);
+    });
+  }
+
+  document.querySelectorAll('.card').forEach(card => {
+    const title = card.querySelector('span').textContent;
+    const url = card.getAttribute('href');
+
+    const favBtn = document.createElement('button');
+    favBtn.textContent = '⭐';
+    favBtn.style.background = 'none';
+    favBtn.style.border = 'none';
+    favBtn.style.cursor = 'pointer';
+    favBtn.title = '点击收藏/取消收藏';
+    favBtn.onclick = (e) => {
+      e.preventDefault();
+      let favorites = JSON.parse(localStorage.getItem('favorites') || '[]');
+      if (favorites.find(f => f.url === url)) {
+        favorites = favorites.filter(f => f.url !== url);
+      } else {
+        favorites.unshift({ title, url });
+      }
+      localStorage.setItem('favorites', JSON.stringify(favorites));
+      renderFavorites();
+    };
+
+    card.appendChild(favBtn);
+  });
+
+  renderFavorites();
+</script>
 </body>
 </html>
